@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -47,6 +48,125 @@ namespace Mvc5UserCrudManager.Controllers
                 });
             }
             return View(userList);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public ActionResult Create()
+        {
+            var model = new UserViewModel();
+            CreateCourseList(model);
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        //public async Task<ActionResult> Create(UserViewModel model)
+        //{
+        //    User user = new Models.User
+        //    {
+        //        Id = Guid.NewGuid().ToString(),
+        //        FirstName = model.FirstName,
+        //        LastName = model.LastName,
+        //        Email = model.Email,
+        //        Gender = model.Gender
+        //    };
+        //    db.Users.Add(user);
+
+        //    var countryId = db.Countries.Where(m => m.Name == model.Country).Select(m => m.Id).FirstOrDefault();
+        //    UserCountry userCountry = new UserCountry
+        //    {
+        //        UserCountryId = Guid.NewGuid().ToString(),
+        //        UserId = user.Id,
+        //        CountryId = countryId
+        //    };
+        //    db.UserCountries.Add(userCountry);
+
+        //    UserDescription userDescription = new UserDescription
+        //    {
+        //        UserId = user.Id,
+        //        Description = model.Description
+        //    };
+        //    db.UserDescription.Add(userDescription);
+
+        //    foreach(var course in model.Courses)
+        //    {
+        //        if (course.Checked == true)
+        //        {
+        //            UserCourse userCourse = new UserCourse
+        //            {
+        //                UserCourseId = Guid.NewGuid().ToString(),
+        //                UserId = user.Id,
+        //                CourseId = user.Id,
+        //                Checked = true
+        //            };
+        //            db.UserCourses.Add(userCourse);
+        //        }                
+        //    }
+        //    await db.SaveChangesAsync();
+        //    return RedirectToAction("Index", "Home");
+        //}
+        public async Task<ActionResult> Create(UserViewModel model)
+        {
+            User user = new User
+            {
+                Id = Guid.NewGuid().ToString(),
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                Gender = model.Gender
+            };
+            db.Users.Add(user);
+
+            var countryId = db.Countries.Where(m => m.Name == model.Country).Select(m => m.Id).FirstOrDefault();
+            UserCountry userCountry = new UserCountry
+            {
+                UserCountryId = Guid.NewGuid().ToString(),
+                UserId = user.Id,
+                CountryId = countryId
+            };
+            db.UserCountries.Add(userCountry);
+
+
+            UserDescription userDescription = new UserDescription
+            {
+                UserId = user.Id,
+                Description = model.Description
+            };
+            db.UserDescription.Add(userDescription);
+
+
+            foreach (var course in model.Courses)
+            {
+
+                if (course.Checked == true)
+                {
+                    UserCourse userCourse = new UserCourse
+                    {
+                        UserCourseId = Guid.NewGuid().ToString(),
+                        UserId = user.Id,
+                        CourseId = course.Id,
+                        Checked = true
+                    };
+                    db.UserCourses.Add(userCourse);
+                }
+            }
+
+            await db.SaveChangesAsync();
+            return RedirectToAction("Index", "Home");
+
+        }
+
+        public void CreateCourseList(UserViewModel model)
+        {
+            courses.Clear();
+            List<Course> userCourses = db.Courses.ToList();
+            foreach(var course in userCourses)
+            {
+                courses.Add(new Course { Name = course.Name, Id = course.Id, Checked = course.Checked });
+            }
+            model.Courses = courses;
         }
 
         public static IEnumerable<SelectListItem> GetCountries()
